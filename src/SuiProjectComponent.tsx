@@ -91,7 +91,8 @@ const SuiProjectsComponent: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col">
             <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
                 <header className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Walrus Devnet Hackathon - Community Vote ({projects.length})</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Walrus Devnet Hackathon - Community Votes</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Total Project Counts {projects.length}</h1>
                     <p className="text-lg text-gray-700 mb-4">Discover innovative projects powering the SUI blockchain ecosystem</p>
                     <div className="max-w-md mx-auto">
                         <div className="relative">
