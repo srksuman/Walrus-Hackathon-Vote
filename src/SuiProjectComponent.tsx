@@ -2,29 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown, Github, Globe, ThumbsUp, Search, Loader } from 'lucide-react';
 import axios from "axios";
 
-// Sample data with 20 projects for demonstration
-const sampleData = {
-    "jsonrpc": "2.0",
-    "result": {
-        "data": {
-            "content": {
-                "fields": {
-                    "project_list": Array(20).fill().map((_, i) => ({
-                        "fields": {
-                            "name": `Project ${i + 1}`,
-                            "github_url": `https://github.com/project${i + 1}`,
-                            "walrus_site_url": `https://project${i + 1}.walrus.site/`,
-                            "votes": Math.floor(Math.random() * 100).toString(),
-                            "description": `This is a sample description for Project ${i + 1}. It demonstrates the functionality of our updated component with various features and improvements.`
-                        }
-                    }))
-                }
-            }
-        }
-    }
-};
-
-const ProjectCard: React.FC<{ project: any }> = ({ project }) => {
+const ProjectCard: React.FC<{ project }> = ({ project }) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
