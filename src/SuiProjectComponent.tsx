@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Github, Globe, ThumbsUp, Search, Loader } from 'lucide-react';
+import { X, Github, Globe, ThumbsUp, Search, Loader, BarChart as BarChartIcon, PieChart as PieChartIcon, TrendingUp, List } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 import axios from "axios";
 
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC0CB', '#A52A2A'];
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
@@ -95,10 +98,97 @@ const ProjectCard: React.FC<{ project }> = ({ project }) => {
     );
 };
 
+const ChartTabs = ({ projects }) => {
+    const [activeTab, setActiveTab] = useState('bar');
+
+    const chartData = useMemo(() => {
+        return projects.map(project => ({
+            name: project.fields.name,
+            votes: parseInt(project.fields.votes)
+        })).sort((a, b) => b.votes - a.votes).slice(0, 10);
+    }, [projects]);
+
+    const renderBarChart = () => (
+        <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={chartData}>
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="votes" fill="#8884d8" />
+            </BarChart>
+        </ResponsiveContainer>
+    );
+
+    const renderPieChart = () => (
+        <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+                <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="votes"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                </Pie>
+                <Tooltip />
+            </PieChart>
+        </ResponsiveContainer>
+    );
+
+    const renderLineChart = () => (
+        <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={chartData}>
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
+                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="votes" stroke="#8884d8" activeDot={{ r: 8 }} />
+            </LineChart>
+        </ResponsiveContainer>
+    );
+
+    return (
+        <div className="mt-8">
+            <div className="flex mb-4">
+                <button
+                    className={`flex items-center px-4 py-2 rounded-t-lg ${activeTab === 'bar' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                    onClick={() => setActiveTab('bar')}
+                >
+                    <BarChartIcon size={18} className="mr-2" /> Bar Chart
+                </button>
+                <button
+                    className={`flex items-center px-4 py-2 rounded-t-lg ${activeTab === 'pie' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                    onClick={() => setActiveTab('pie')}
+                >
+                    <PieChartIcon size={18} className="mr-2" /> Pie Chart
+                </button>
+                <button
+                    className={`flex items-center px-4 py-2 rounded-t-lg ${activeTab === 'line' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                    onClick={() => setActiveTab('line')}
+                >
+                    <TrendingUp size={18} className="mr-2" /> Line Chart
+                </button>
+            </div>
+            <div className="bg-white p-4 rounded-b-lg shadow">
+                {activeTab === 'bar' && renderBarChart()}
+                {activeTab === 'pie' && renderPieChart()}
+                {activeTab === 'line' && renderLineChart()}
+            </div>
+        </div>
+    );
+};
+
 const SuiProjectsComponent: React.FC = () => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeMainTab, setActiveMainTab] = useState('projects');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -135,8 +225,11 @@ const SuiProjectsComponent: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col">
             <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
                 <header className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Walrus Devnet Hackathon - Community Votes</h1>
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Total Projects: {projects.length}</h1>                    <p className="text-lg text-gray-700 mb-4">Discover innovative projects powering the SUI blockchain ecosystem</p>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Walrus Devnet Hackathon - Community Votes
+                    </h1>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Total Projects: {projects.length}
+                    </h1>
+                    <p className="text-lg text-gray-700 mb-4">Discover innovative projects powering the SUI blockchain ecosystem</p>
                     <div className="max-w-md mx-auto">
                         <div className="relative">
                             <input
@@ -150,25 +243,46 @@ const SuiProjectsComponent: React.FC = () => {
                         </div>
                     </div>
                 </header>
-                <div className="flex-grow overflow-auto">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-full">
-                            <Loader size={40} className="animate-spin text-blue-500" />
-                            <span className="ml-2 text-lg text-gray-700">Loading projects...</span>
-                        </div>
-                    ) : sortedAndFilteredProjects.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {sortedAndFilteredProjects.map((project, index) => (
-                                <ProjectCard key={index} project={project.fields} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-10">
-                            <p className="text-xl text-gray-700 mb-2">No projects found</p>
-                            <p className="text-gray-500">Try adjusting your search terms or check back later for new projects.</p>
-                        </div>
-                    )}
+
+                <div className="flex mb-4 justify-center">
+                    <button
+                        className={`flex items-center px-6 py-3 rounded-tl-lg rounded-bl-lg ${activeMainTab === 'projects' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                        onClick={() => setActiveMainTab('projects')}
+                    >
+                        <List size={18} className="mr-2" /> Projects
+                    </button>
+                    <button
+                        className={`flex items-center px-6 py-3 rounded-tr-lg rounded-br-lg ${activeMainTab === 'charts' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                        onClick={() => setActiveMainTab('charts')}
+                    >
+                        <BarChartIcon size={18} className="mr-2" /> Charts
+                    </button>
                 </div>
+
+                {loading ? (
+                    <div className="flex justify-center items-center h-full">
+                        <Loader size={40} className="animate-spin text-blue-500" />
+                        <span className="ml-2 text-lg text-gray-700">Loading projects...</span>
+                    </div>
+                ) : (
+                    <div className="flex-grow overflow-auto">
+                        {activeMainTab === 'projects' && (
+                            sortedAndFilteredProjects.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {sortedAndFilteredProjects.map((project, index) => (
+                                        <ProjectCard key={index} project={project.fields} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-xl text-gray-700 mb-2">No projects found</p>
+                                    <p className="text-gray-500">Try adjusting your search terms or check back later for new projects.</p>
+                                </div>
+                            )
+                        )}
+                        {activeMainTab === 'charts' && <ChartTabs projects={projects} />}
+                    </div>
+                )}
             </div>
             <footer className="bg-gray-800 text-white py-4">
                 <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center">
